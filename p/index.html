@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Upstone</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+.big{display:block;text-align:center;background:var(--text);color:var(--bg);border-color:var(--text);padding:16px 18px;margin:18px 0 8px;font-size:18px}
+.wide{display:block;width:100%;text-align:center;background:transparent;color:inherit;font:inherit;font-weight:700;cursor:pointer}
+.list{list-style:none;padding:0;margin:8px 0 0}.list li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--hair);margin:0}
+.list li span:first-child{flex:0 0 auto;max-width:55%}.list li span:last-child{color:var(--muted);text-align:right}
+.steps{color:var(--muted);font-size:15px}
+</style>
+</head>
+<body>
+<main>
+<p class="eyebrow"><a href="../">Upstone</a></p>
+<h1 id="h">Upstone</h1>
+<p class="muted" id="sub"></p>
+<div class="card" id="card" hidden><h2 id="name"></h2><p class="muted" id="meta"></p><ul class="list" id="list"></ul></div>
+<a class="btn big" id="open" href="#" hidden></a>
+<button class="btn wide" id="copy" type="button" hidden></button>
+<p class="steps" id="steps"></p>
+</main>
+<script>
+(function(){
+  var pl = /^pl/i.test(navigator.language || '');
+  function T(en, p){ return pl ? p : en; }
+  function $(id){ return document.getElementById(id); }
+  function unpack(c){ c = c.replace(/-/g, '+').replace(/_/g, '/'); while (c.length % 4) c += '='; return JSON.parse(decodeURIComponent(escape(atob(c)))); }
+  function row(a, b){ var li = document.createElement('li'), x = document.createElement('span'), y = document.createElement('span'); x.textContent = a; y.textContent = b; li.appendChild(x); li.appendChild(y); return li; }
+  document.documentElement.lang = pl ? 'pl' : 'en';
+  var m = decodeURIComponent(location.hash || '').match(/U[PR]1-[A-Za-z0-9_\-]+/), code = m ? m[0] : '', o = null;
+  try { if (code) o = unpack(code.slice(4)); } catch (e) { o = null; }
+  if (!o) { $('h').textContent = T('This link is not complete.', 'Ten link jest niepełny.'); $('sub').textContent = T('Ask for it again and open the whole link.', 'Poproś o niego jeszcze raz i otwórz cały link.'); return; }
+  var plan = code.indexOf('UP1-') === 0;
+  if (plan) {
+    $('h').textContent = T('A workout plan for you', 'Plan treningowy dla ciebie');
+    $('sub').textContent = o.c ? T('From: ', 'Od: ') + String(o.c).slice(0, 24) : '';
+    $('name').textContent = String(o.n || 'Plan').slice(0, 60);
+    var it = (o.i || []).slice(0, 30); $('meta').textContent = it.length + ' ' + T('exercises', 'ćwiczeń');
+    it.forEach(function(x){ $('list').appendChild(row(String((x && x[0]) || '').slice(0, 80), String((x && x[1]) || '').slice(0, 20))); });
+    $('steps').textContent = T('The button opens the Upstone app and adds the plan to your workouts. If nothing happens: copy the code, then in the app go to Train, Coach, and paste it.', 'Przycisk otwiera aplikację Upstone i dodaje plan do twoich treningów. Jeśli nic się nie dzieje: skopiuj kod, potem w aplikacji wejdź w Trening, Trener i wklej go.');
+  } else {
+    $('h').textContent = T('A workout result', 'Wynik treningu');
+    $('sub').textContent = String(o.n || '').slice(0, 24);
+    $('name').textContent = String(o.w || '').slice(0, 60);
+    $('meta').textContent = String(o.d || '').slice(0, 10) + (o.t ? ' · ' + parseInt(o.t, 10) + ' min' : '');
+    (o.x || []).slice(0, 30).forEach(function(e){ var ss = ((e && e[1]) || []).slice(0, 12).map(function(s){ return (s && s[0] ? String(s[0]).slice(0, 6) + ' kg × ' : '') + String((s && s[1]) || '?').slice(0, 5); }).join(', '); $('list').appendChild(row(String((e && e[0]) || '').slice(0, 60), ss)); });
+    $('steps').textContent = T('The button opens the Upstone app and saves this result under Train, Coach. If nothing happens: copy the code and paste it there.', 'Przycisk otwiera aplikację Upstone i zapisuje ten wynik w Trening, Trener. Jeśli nic się nie dzieje: skopiuj kod i wklej go tam.');
+  }
+  $('card').hidden = false;
+  var a = $('open'); a.href = 'upstone://p#' + code; a.textContent = T('Open in Upstone', 'Otwórz w Upstone'); a.hidden = false;
+  var c = $('copy'); c.textContent = T('Copy the code', 'Skopiuj kod'); c.hidden = false;
+  c.addEventListener('click', function(){ var done = function(){ c.textContent = T('Copied', 'Skopiowano'); };
+    try { navigator.clipboard.writeText(code).then(done, function(){ prompt(T('Copy this code:', 'Skopiuj ten kod:'), code); }); } catch (e) { prompt(T('Copy this code:', 'Skopiuj ten kod:'), code); } });
+})();
+</script>
+</body>
+</html>
